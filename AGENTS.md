@@ -181,13 +181,18 @@ missing records answer `404 { error: { message: "<Thing> not found" } }`.
 
 ## Deployment
 
-- Target: **Vercel** (`npx vercel deploy --prod`). Build command is
-  `npm run build`; no extra configuration is needed beyond `vercel.json`.
+- Target: **Vercel**. `vercel.json` pins the framework, install command
+  (`npm install`) and build command (`npm run build`).
+- First-time flow: `vercel login` -> `vercel link` (creates/links the project to
+  this folder) -> `vercel --prod` -> `vercel env add <NAME> production` for the
+  secrets above. Once the GitHub repo is connected in the dashboard, every push
+  to the default branch redeploys automatically.
 - Attach a Postgres database to the project and expose it as `DATABASE_URL` so
   data survives cold starts; `/api/health` reports `storage.persistent: false`
-  while the app is still in demo mode.
+  while the app is still in demo mode (PGlite inside `/tmp`).
 - Background reminders: point any scheduler at
-  `POST /api/notifications/dispatch` (see README). The in-app poller in
+  `POST /api/notifications/dispatch` (see README) or add a `crons` entry to
+  `vercel.json` - sub-daily schedules require a Pro plan. The in-app poller in
   `components/ReminderEngine.tsx` covers the "app open" case on its own.
 - After deploying, verify with `curl https://<deployment>/api/health` and run
   the smoke check described in the README.

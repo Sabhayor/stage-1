@@ -106,8 +106,34 @@ appear, then check `/todos`, `/notes`, `/calendar` and `/reminders`.
 
 ## Deployment
 
-- Target: **Vercel** — `npx vercel deploy --prod` (build command `npm run build`).
-- Attach a Postgres database and expose it as `DATABASE_URL`; `/api/health` reports
-  `storage.persistent: false` while the app still runs in demo mode.
-- Add the VAPID variables and point a scheduler at
-  `POST /api/notifications/dispatch` for background reminders.
+- Target: **Vercel** — the repo ships a `vercel.json` with the framework, install
+  and build commands, so a deploy needs no extra configuration.
+- `vercel login` once, then:
+
+  ```bash
+  vercel link          # creates/links the project to this folder
+  vercel --prod        # production deploy -> prints the https URL
+  vercel env add DATABASE_URL production   # and the rest of the variables below
+  ```
+
+- Attach a Postgres database (Neon / Vercel Postgres) and expose it as
+  `DATABASE_URL`; without it the app runs in demo mode on PGlite inside `/tmp`,
+  which `/api/health` reports as `storage.persistent: false`.
+- Add the VAPID variables so background push works, and `CRON_SECRET` to protect
+  the dispatch endpoint.
+- **Background reminders** (optional): point a scheduler at
+  `POST /api/notifications/dispatch`. Vercel Cron can do it directly, but
+  sub-daily schedules need a Pro plan — add this to `vercel.json` once you have
+  one:
+
+  ```json
+  {
+    "crons": [{ "path": "/api/notifications/dispatch", "schedule": "*/5 * * * *" }]
+  }
+  ```
+
+  Vercel sends `Authorization: Bearer $CRON_SECRET` automatically, which is why
+  the endpoint reads it.
+- After deploying, verify with `curl https://<deployment>/api/health` and run the
+  smoke check above.
+
