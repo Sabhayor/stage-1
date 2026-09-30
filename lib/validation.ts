@@ -76,7 +76,11 @@ export const noteUpdateSchema = z
   .object({
     title: z.string().trim().max(200).optional(),
     content: z.string().max(20000).optional(),
-    tags: z.union([z.string().max(200), z.array(z.string().max(40)).max(20)]),
+    // Every field of an update is optional: a PATCH that only touches `pinned`
+    // (or `title`) must not be rejected for a missing `tags`.
+    tags: z
+      .union([z.string().max(200), z.array(z.string().max(40)).max(20)])
+      .optional(),
     pinned: z.boolean().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {

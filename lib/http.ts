@@ -57,10 +57,41 @@ export async function parseBody<T>(
   return { ok: true, data: result.data };
 }
 
+/**
+ * Validate the query string of a request against a Zod schema.
+ *
+ * Unknown parameters are ignored, so URLs may carry UI-only extras.
+ */
+export function parseQuery<T>(
+  request: Request,
+  schema: ZodType<T>,
+): Parsed<T> {
+  const url = new URL(request.url);
+  const raw: Record<string, string> = {};
+  for (const [key, value] of url.searchParams.entries()) {
+    raw[key] = value;
+  }
+
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    return {
+      ok: false,
+      response: apiError(
+        "Invalid query parameters",
+        400,
+        result.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      ),
+    };
+  }
+  return { ok: true, data: result.data };
+}
+
 interface RouteContext<P> {
   params: Promise<P>;
 }
-
 type Handler<A extends unknown[]> = (
   request: Request,
   ...args: A

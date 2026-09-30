@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import type { SqlDatabase } from "./types";
 
@@ -16,6 +17,10 @@ export interface PgliteOptions {
 export async function createPgliteDatabase(
   options: PgliteOptions = {},
 ): Promise<SqlDatabase> {
+  // PGlite creates its own data directory but not the parent folders, so a fresh
+  // checkout would fail with `ENOENT: mkdir '...\.data\pglite'`.
+  if (options.dataDir) fs.mkdirSync(options.dataDir, { recursive: true });
+
   const db = options.dataDir ? new PGlite(options.dataDir) : new PGlite();
   await db.waitReady;
 

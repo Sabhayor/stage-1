@@ -30,8 +30,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local PGlite data directory (development storage)
+/.data/
+
 # env files (can opt-in for committing if needed)
 .env*
+
+# secrets
+*.key
+*.p12
+
+# local editor settings
+.idea/
 
 # vercel
 .vercel
